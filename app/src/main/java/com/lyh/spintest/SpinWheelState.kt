@@ -23,7 +23,6 @@ data class SpinWheelState(
     internal val items: List<SpinWheelItem>,
     @DrawableRes internal val backgroundImage: Int,
     @DrawableRes internal val centerImage: Int,
-    @DrawableRes internal val indicatorImage: Int,
     private val initSpinWheelSection: Int?,
     private val onSpinningFinished: (() -> Unit)?,
     private val stopDuration: Duration,
@@ -89,6 +88,72 @@ data class SpinWheelState(
             )
         }
     }
+
+    fun launchCustomRotation(timeInSeconds: Float) {
+        scope.launch {
+            // Calculate how many full rotations in the given time
+            val rotations = (timeInSeconds * rotationPerSecond).toInt()
+
+            // Start animating the wheel for the desired time
+            rotation.animateTo(
+                targetValue = rotation.value + 360f * rotations, // Full rotations
+                animationSpec = tween(
+                    durationMillis = (timeInSeconds * 1000f).toInt(), // Convert to milliseconds
+                    easing = LinearEasing // You can customize easing if needed
+                )
+            )
+        }
+    }
+
+    fun gotoWithCustomTime(section: Int, timeInSeconds: Float, speedMultiplier: Float = 1f) {
+        scope.launch {
+            rotation.snapTo(getDegreeFromSection(items, 0))
+            if (section !in items.indices) {
+                return@launch
+            }
+
+            val targetDegree = getDegreeFromSection(items, section)
+
+            // Adjust the full rotation calculation using the speedMultiplier
+            val fullRotations = 360f * (timeInSeconds * rotationPerSecond * speedMultiplier).toInt()
+            // Calculate the final degree, incorporating the speed multiplier
+            val finalDegree = rotation.value + fullRotations + targetDegree
+
+            rotation.animateTo(
+                targetValue = finalDegree,
+                animationSpec = tween(
+                    durationMillis = (timeInSeconds * 1000).toInt(),
+                    easing = LinearEasing
+                )
+            )
+        }
+    }
+
+    fun spinWithCustomTimeAndStop(sectionToStop: Int, timeInSeconds: Float) {
+        if (sectionToStop !in items.indices) {
+            return
+        }
+
+        scope.launch {
+            val destinationDegree = getDegreeFromSectionWithRandom(items, sectionToStop)
+
+            // Full rotations over the given custom time
+            val fullRotations = 360f * (timeInSeconds * rotationPerSecond).toInt()
+
+            // Calculate the final rotation value including the destination section
+            val finalDegree = rotation.value + fullRotations + destinationDegree + (360f - (rotation.value % 360f))
+
+            // Animate the wheel to spin for the desired time and stop at the destination section
+            rotation.animateTo(
+                targetValue = finalDegree,
+                animationSpec = tween(
+                    durationMillis = (timeInSeconds * 1000).toInt(),
+                    easing = EaseOutQuad
+                )
+            )
+        }
+    }
+
 }
 
 @Composable
@@ -96,7 +161,6 @@ fun rememberSpinWheelState(
     items: PersistentList<SpinWheelItem>,
     @DrawableRes backgroundImage: Int,
     @DrawableRes centerImage: Int,
-    @DrawableRes indicatorImage: Int,
     onSpinningFinished: (() -> Unit)?,
     initSpinWheelSection: Int? = 0, //if null then infinite
     stopDuration: Duration = 8.seconds,
@@ -109,7 +173,6 @@ fun rememberSpinWheelState(
             items = items,
             backgroundImage = backgroundImage,
             centerImage = centerImage,
-            indicatorImage = indicatorImage,
             initSpinWheelSection = initSpinWheelSection,
             stopDuration = stopDuration,
             stopNbTurn = stopNbTurn,

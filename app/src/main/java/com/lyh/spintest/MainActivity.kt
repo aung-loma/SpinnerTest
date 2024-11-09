@@ -3,25 +3,36 @@ package com.lyh.spintest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chargemap.compose.numberpicker.NumberPicker
 import com.lyh.spintest.ui.theme.SpinTestTheme
+import com.lyh.spintest.util.noRippleClickable
 import com.lyh.spintest.util.toColor
 import kotlinx.collections.immutable.toPersistentList
 import kotlin.random.Random
@@ -30,95 +41,56 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var isLastIndex by remember { mutableStateOf(false) }
             SpinTestTheme {
-                val colors1 = remember {
-                    listOf(
-                        "380048",
-                        "2B003D",
-                        "40004A",
-                        "590058",
-                        "730067"
-                    ).map { it.toColor() }
-                }
-
-                val colors2 = remember {
-                    listOf(
-                        "F9A114",
-                        "FD7D1B",
-                        "F9901A",
-                        "F6A019",
-                        "EFC017"
-                    ).map { it.toColor() }
-                }
-
                 val items = remember {
-                    List(8) { index ->
-                        val colors = if (index % 2 == 0) colors1 else colors2
-
-                        SpinWheelItem(
-                            colors = colors.toPersistentList()
-                        ) {
+                    listOf(
+                        "VIP 1", "1$", "5$", "10$", "VIP 2",
+                        "50$", "VIP 3", "75$", "100$", "AA"
+                        ).map { item ->
+                        SpinWheelItem {
                             Text(
-                                text = "$$index",
-                                style = TextStyle(color = Color(0xFF4CAF50), fontSize = 20.sp)
+                                text = "$item",
+                                style = TextStyle(color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.W700, lineHeight = 17.31.sp),
+                                modifier = Modifier.rotate(270f)
                             )
                         }
 
                     }.toPersistentList()
                 }
-                var pickerValue by remember { mutableIntStateOf(0) }
 
                 val spinState = rememberSpinWheelState(
                     items = items,
-                    backgroundImage = R.drawable.spin_wheel_background,
-                    centerImage = R.drawable.spin_wheel_center,
-                    indicatorImage = R.drawable.spin_wheel_tick,
+                    backgroundImage = R.drawable.ic_spinner_background,
+                    centerImage = R.drawable.ic_spin_button,
                     onSpinningFinished = null,
+                    rotationPerSecond = 2f
                 )
 
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(40.dp)
                 ) {
-
-
-                    Box(modifier = Modifier.size(300.dp)) {
-                        SpinWheelComponent(spinState)
-                    }
-                    Spacer(modifier = Modifier.size(20.dp))
-                    Button(onClick = {
-                        spinState.goto(pickerValue)
-                    }) {
-                        Text(text = "Goto")
-                    }
-                    Spacer(modifier = Modifier.size(20.dp))
-                    Button(onClick = {
-                        spinState.launchInfinite()
-                    }
-                    ) {
-                        Text(text = "Infinite")
-                    }
-                    Spacer(modifier = Modifier.size(20.dp))
-                    Button(onClick = {
-                        spinState.stoppingWheel(pickerValue)
-                    }) {
-                        Text(text = "Stop")
-                    }
-                    Spacer(modifier = Modifier.size(20.dp))
-
-
-
-
-                    NumberPicker(
-                        value = pickerValue,
-                        range = items.indices,
-                        onValueChange = {
-                            pickerValue = it
+                    Column (modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(modifier = Modifier.padding(24.dp).size(230.dp), contentAlignment = Alignment.Center) {
+                            SpinWheelComponent(spinState)
                         }
-                    )
-                }
+                        Button(onClick = {
+                            if(isLastIndex) {
+                                spinState.spinWithCustomTimeAndStop(9,10f)
+                                isLastIndex = false
+                            } else {
+                                spinState.spinWithCustomTimeAndStop(Random.nextInt(0,8),10f)
+                            }
+                        }, modifier = Modifier.padding(top = 24.dp)) {
+                            Text(text = "Go")
+                        }
+                    }
 
+                    Box(modifier = Modifier.padding(24.dp).size(30.dp).clip(CircleShape).background(color = Color.Transparent, shape = CircleShape).align(Alignment.BottomStart).noRippleClickable(false) {
+                        isLastIndex = true
+                    })
+                }
             }
         }
     }

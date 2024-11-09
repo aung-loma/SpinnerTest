@@ -7,7 +7,6 @@ import kotlinx.collections.immutable.PersistentList
 
 @Stable
 data class SpinWheelItem(
-    val colors: PersistentList<Color>,
     val content: @Composable () -> Unit,
 )
 

@@ -32,13 +32,15 @@ import com.lyh.spintest.util.toColor
 internal fun SpinWheelSlice(
     modifier: Modifier = Modifier,
     size: Dp,
-    brush: Brush,
+    color: Color,
     degree: Float,
+    topPadding : Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     Box(
         modifier = modifier
             .size(size)
+            .padding(top = topPadding)
     ) {
         Canvas(
             modifier = Modifier
@@ -46,7 +48,7 @@ internal fun SpinWheelSlice(
         ) {
 
             drawArc(
-                brush = brush,
+                color = color,
                 startAngle = -90f - (degree / 2),
                 sweepAngle = degree,
                 useCenter = true,
@@ -93,17 +95,9 @@ private fun OneSpinWheelSlicePreview() {
     BoxWithConstraints(modifier = Modifier.size(400.dp)) {
         val degree = 360f / 10.toFloat()
         val size = min(this.maxHeight, this.maxWidth)
-        val brushEnd = with(LocalDensity.current) { size.toPx() / 2f }
         SpinWheelSlice(
             size = size,
-            brush = Brush.verticalGradient(
-                 listOf(
-                    Color.Red,
-                    Color.Yellow
-                ),
-                startY = 0f,
-                endY = brushEnd,
-            ),
+            color =  Color.Red,
             degree = degree,
         ) {
             Box(
@@ -126,40 +120,16 @@ private fun OneSpinWheelSlicePreview() {
 @Composable
 private fun FullSpinWheelSlicePreview() {
 
-    val colors1 = remember {
-        listOf(
-            "380048",
-            "2B003D",
-            "40004A",
-            "590058",
-            "730067"
-        ).map { it.toColor() }
-    }
-
-    val colors2 = remember {
-        listOf(
-            "F9A114",
-            "FD7D1B",
-            "F9901A",
-            "F6A019",
-            "EFC017"
-        ).map { it.toColor() }
-    }
-
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
 
         val degree = 360f / 6.toFloat()
         val size = min(this.maxHeight, this.maxWidth)
-        val brushEnd = with(LocalDensity.current) { size.toPx() / 2f }
 
         repeat(6) { index ->
             SpinWheelSlice(
                 modifier = Modifier.rotate(degrees = degree * index),
                 size = size,
-                brush = Brush.verticalGradient(
-                    if (index % 2 == 0) colors1 else colors2,
-                    endY = brushEnd,
-                ),
+                color =  Color.Red,
                 degree = degree,
             ){
 
